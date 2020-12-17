@@ -1,0 +1,33 @@
+{
+  "name": "rv-employee-tracker",
+  "version": "1.0.0",
+  "description": "This command-line application is used to manage a company's employees",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rayna-v/rv-employee-tracker.git"
+  },
+  "keywords": [
+    "nodejs",
+    "inquirer",
+    "mysql",
+    "employee",
+    "management"
+  ],
+  "author": "Rayna Veuleman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rayna-v/rv-employee-tracker/issues"
+  },
+  "homepage": "https://github.com/rayna-v/rv-employee-tracker#readme",
+  "dependencies": {
+    "ascii": "^1.0.0",
+    "chalk": "^4.1.0",
+    "console.table": "^0.10.0",
+    "inquirer": "^7.3.3",
+    "mysql": "^2.18.1"
+  }
+}

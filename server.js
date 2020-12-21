@@ -2,8 +2,7 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
 const chalk = require('chalk');
-const RawListPrompt = require('inquirer/lib/prompts/rawlist');
-// const remove = require('./CRUD');
+
 // creates connection
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -13,12 +12,11 @@ const connection = mysql.createConnection({
     database: 'employee_trackerDB',
 });
 
-console.log(chalk.blue('Employee') + chalk.red('Tracker'));
-
-// console.log(chalk.blue.bgRed.bold('Hello world!'));
-
-// ----------------------------------------------------------> Initial Prompts
+// --------------------------------------------------------------------------------> Initial Prompts
 const runInquirer = () => {
+    console.log(chalk.white('---------------------------------------------------------------------------------'))
+    console.log(chalk.blue('Employee ') + chalk.red('Tracker'));
+    console.log(chalk.white('---------------------------------------------------------------------------------'))
     inquirer
         .prompt(
             {
@@ -48,7 +46,51 @@ const runInquirer = () => {
             }
         });
 };
-const remove = (selection) => {
+// ----------------------------------------------------------> READ Actions
+const view = () => {
+    inquirer
+        .prompt({
+            type: 'rawlist',
+            message: 'Which would you like to view?',
+            choices: ['employee', 'role', 'department'],
+            name: 'selection'
+        }
+        ).then(({ selection }) => {
+            console.log(chalk.blue.bgYellow.bold(`Viewing all ${selection}s:`));
+            connection.query(
+                `SELECT * FROM ${selection}`, (err, data) => {
+                    if (err) throw err;
+                    console.table(data);
+                }
+            )
+
+        }).then(() => {
+            runInquirer();
+            //     inquirer.prompt(
+            //         {
+            //             type: 'confirm',
+            //             message: "View another department, role, or employee?",
+            //             name: "viewAnother"
+            //         }
+            //     ).then(({ viewAnother }) => {
+            //         switch (viewAnother) {
+            //             case true:
+            //                 view();
+            //             case false:
+            //                 runInquirer();
+            //         }
+            //     })
+        })
+
+}
+
+// ----------------------------------------------------------> UPDATE Actions
+const update = () => {
+
+}
+
+// ----------------------------------------------------------> DELETE Actions
+const remove = () => {
     inquirer.prompt(
         {
             type: 'list',
@@ -59,11 +101,11 @@ const remove = (selection) => {
     ).then(({ selection }) => {
         console.log(chalk.red(`Delete a ${selection}:`));
         connection.query(
-            `SELECT * FROM ${selection}`, (err, data) => {
+            `SELECT * FROM ${selection};`, (err, data) => {
                 inquirer
                     .prompt(
                         {
-                            type: "rawlist",
+                            type: 'list',
                             message: `Enter the item # of the ${selection} you wish to delete.`,
                             choices() {
                                 const deptArray = [];
@@ -86,8 +128,8 @@ const remove = (selection) => {
                                 console.log(chalk.greenBright(` You have successfully deleted the ${deletedSelection} ${selection}.`))
                                 inquirer.prompt(
                                     {
-                                        type: confirm,
-                                        message: "Delete another department, selection or employee?",
+                                        type: 'confirm',
+                                        message: "Delete another department, role, or employee?",
                                         name: "deleteAnother"
                                     }
                                 ).then(({ deleteAnother }) => {
@@ -107,7 +149,7 @@ const remove = (selection) => {
     })
 }
 
-// ----------------------------------------------------------> Add Actions
+// ----------------------------------------------------------> CREATE Actions
 const add = () => {
     inquirer
         .prompt(
@@ -224,8 +266,7 @@ const newRole = () => {
 // ----------------------------------> Add Employee
 const newEmployee = () => {
     connection.query(
-        'SELECT role.id, role.title, role.department_id, department.id, department.name FROM role INNER JOIN department ON (role.department_id = department.id) ORDER BY department.id', (err, data) => {
-            console.log(data);
+        'SELECT employee.id, employee.first_name, employee.last_name, employee.role_id, role.id, role.title, role.department_id FROM employee LEFT JOIN role ON (employee.role_id = role.id) ORDER BY employee.role_id', (err, data) => {
             inquirer
                 .prompt([
                     {
@@ -240,15 +281,18 @@ const newEmployee = () => {
                     },
                     {
                         type: "rawlist",
-                        message: "Select a department for this employee ",
+                        message: "Select a Manager for this employee ",
+                        // choices: ["Senior Management", "Business Development", "Engineering", "Administration"],
+
                         choices() {
-                            const deptArray = [];
-                            data.forEach((name) => {
-                                deptArray.push(name);
+                            const managerArray = [];
+                            data.forEach((employee) => {
+                                console.log(employee.first_name + employee.last_name)
+                                managerArray.push(employee.first_name + " " + employee.last_name);
                             })
-                            return deptArray;
+                            return managerArray;
                         },
-                        name: "department_id"
+                        name: "manager_id"
                     },
                     {
                         type: "rawlist",
@@ -256,34 +300,35 @@ const newEmployee = () => {
                         choices() {
                             const deptArray = [];
                             data.forEach((title) => {
-                                deptArray.push(title);
+                                // console.log(title.title)
+                                deptArray.push(title.title);
                             })
                             return deptArray;
                         },
                         name: "role_id"
                     },
-                ]).then(({ first_name, last_name, department_id, role_id }) => {
-                    // console.log(department_id)
-                    connection.query(`SELECT id FROM department WHERE name=?`,
-                        [department_id],
+                ]).then(({ first_name, last_name, role_id, manager_id }) => {
+                    console.log(manager_id)
+                    console.log(manager_id.split(" "))
+                    connection.query(`SELECT id FROM role WHERE title=?`,
+                        [role_id],
                         (err, res) => {
                             if (err) throw err;
                             console.log(res[0].id)
-                            const deptNumber = res[0].id;
-                            connection.query(`SELECT id FROM role WHERE title=?`,
-                                [role_id],
+                            const roleNumber = res[0].id;
+                            connection.query(`SELECT id FROM employee WHERE first_name=? AND last_name=?`,
+                                [manager_id[0], manager_id[1]],
                                 (err, res) => {
                                     if (err) throw err;
-                                    console.log(res[0].id)
-                                    const roleNumber = res[0].id;
-
+                                    console.log(res[0])
+                                    const managerNumber = res[0];
                                     connection.query(
                                         'INSERT INTO employee SET ?',
                                         {
                                             first_name: first_name,
                                             last_name: last_name,
-                                            department_id: deptNumber,
                                             role_id: roleNumber,
+                                            manager_id: managerNumber
                                         },
                                         (err, res) => {
                                             if (err) throw err;
@@ -291,7 +336,7 @@ const newEmployee = () => {
                                             // return res
                                             connection.query('SELECT * FROM employee', (err, res) => {
                                                 if (err) throw err;
-                                                console.log(res);
+                                                console.table(res);
                                                 runInquirer();
                                             })
                                         });
@@ -302,205 +347,19 @@ const newEmployee = () => {
         }
     )
 }
-// ----------------------------------------------------------> Delete Actions
-const deleteNew = () => {
-    inquirer
-        .prompt(
-            {
-                type: 'list',
-                message: 'Which would you like to delete?',
-                choices: [
-                    'A Department',
-                    'A Role',
-                    'An Employee',
-                    'Exit'
-                ],
-                name: 'action'
-            },
-        ).then(({ action }) => {
-            switch (action) {
-                case 'A Department':
-                    return deleteDepartment();
-                case 'A Role':
-                    return deleteRole();
-                case 'An Employee':
-                    return deleteEmployee();
-                case 'Exit':
-                default:
-                    runInquirer();
-            }
-        })
-}
 
-// ----------------------------------> Delete Department
-const deleteDepartment = () => {
-    console.log(chalk.red("Delete a Department:"));
-    connection.query(
-        'SELECT * FROM department', (err, data) => {
-            inquirer
-                .prompt(
-                    {
-                        type: "rawlist",
-                        message: "Enter the item # of the department you wish to delete.",
-                        choices() {
-                            const deptArray = [];
-                            data.forEach(({ name }) => {
-                                deptArray.push(name);
-                            }
-
-                            );
-                            return deptArray;
-                        },
-                        name: "deletedDepartment",
-                    }
-                ).then(({ deletedDepartment }) => {
-                    connection.query('DELETE FROM department WHERE ?',
-                        {
-                            name: deletedDepartment
-                        },
-                        (err, res) => {
-                            if (err) throw err;
-                            console.log(chalk.greenBright(` You have successfully deleted the ${deletedDepartment} department.`))
-                            inquirer.prompt(
-                                {
-                                    type: confirm,
-                                    message: "Delete another department, role or employee?",
-                                    name: "deleteAnother"
-                                }
-                            ).then(({ deleteAnother }) => {
-                                switch (deleteAnother) {
-                                    case true:
-                                        deleteNew();
-                                    case false:
-                                    default:
-                                        runInquirer();
-                                }
-                            })
-
-                        })
-                }
-                )
-        })
-}
-// ----------------------------------> Delete Role
-const deleteRole = () => {
-    console.log(chalk.red("Delete a Role:"));
-    connection.query(
-        'SELECT * FROM Role', (err, data) => {
-            inquirer
-                .prompt(
-                    {
-                        type: "rawlist",
-                        message: "Enter the item # of the Role you wish to delete.",
-                        choices() {
-                            const deptArray = [];
-                            data.forEach(({ name }) => {
-                                deptArray.push(name);
-                            }
-
-                            );
-                            return deptArray;
-                        },
-                        name: "deletedRole",
-                    }
-                ).then(({ deletedRole }) => {
-                    connection.query('DELETE FROM role WHERE ?',
-                        {
-                            name: deletedRole
-                        },
-                        (err, res) => {
-                            if (err) throw err;
-                            console.log(chalk.greenBright(` You have successfully deleted the ${deletedRole} Role.`))
-                            inquirer.prompt(
-                                {
-                                    type: confirm,
-                                    message: "Delete another department, role or employee?",
-                                    name: "deleteAnother"
-                                }
-                            ).then(({ deleteAnother }) => {
-                                switch (deleteAnother) {
-                                    case true:
-                                        deleteNew();
-                                    case false:
-                                    default:
-                                        runInquirer();
-                                }
-                            })
-
-                        })
-                }
-                )
-        })
-}
-
-// ----------------------------------> Delete Employee
-const deleteEmployee = () => {
-
-}
-
-// ----------------------------------------------------------> View by Manager Actions
+//incomplete
+// ----------------------------------------------------------> View by Manager Actions (READ)
 const viewByManager = () => {
-    // connection.query(
-    //     'SELECT artist FROM top5000 GROUP BY artist HAVING COUNT(*) > 1',
-    //     (err, res) => {
-    //         if (err) throw err;
-
-    //         res.forEach(({ artist }) => {
-    //             console.log(`${artist}`);
-
-    //         })
-    //         runInquirer()
-    //     });
+    console.log(chalk.red("View Employees by Manager is under maintenance"));
     runInquirer();
 }
-// ----------------------------------------------------------> View Budget Actions
+//incomplete
+// ----------------------------------------------------------> View Budget Actions (READ)
 const viewBudget = () => {
-    console.log(chalk.red("Delete a Department:"));
-    connection.query(
-        'SELECT * FROM department', (err, data) => {
-            inquirer
-                .prompt(
-                    {
-                        type: "rawlist",
-                        message: "Select the department to view its budget:",
-                        choices() {
-                            const deptArray = [];
-                            data.forEach(({ name }) => {
-                                deptArray.push(name);
-                            }
-                            );
-                            return deptArray;
-                        },
-                        name: "deptBudget",
-                    }
-                ).then(({ deptBudget }) => {
-                    connection.query('',
-                        {
-
-                        },
-                        (err, res) => {
-                            if (err) throw err;
-                            inquirer.prompt(
-                                {
-                                    type: confirm,
-                                    message: "View another budget?",
-                                    name: "viewAnother"
-                                }
-                            ).then(({ viewAnother }) => {
-                                switch (viewAnother) {
-                                    case true:
-                                        viewBudget();
-                                    case false:
-                                    default:
-                                        runInquirer();
-                                }
-                            })
-
-                        })
-                }
-                )
-        })
-}
+    console.log(chalk.red("View Budget by Department is under maintenance"));
+    runInquirer();
+};
 // asynchronous operation that connects to the database
 connection.connect((err) => {
     if (err) throw err;

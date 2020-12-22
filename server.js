@@ -87,13 +87,20 @@ const view = () => {
 // ----------------------------------------------------------> UPDATE Actions
 const update = () => {
     connection.query(
-        'SELECT * FROM role', (err, data) => {
+        'SELECT * FROM employee', (err, data) => {
             inquirer
                 .prompt([
                     {
-                        type: "",
-                        message: "",
-                        name: "",
+                        type: "rawlist",
+                        message: "Select an employee to update",
+                        choices() {
+                            const employeeArray = [];
+                            data.forEach((employee) => {
+                                employeeArray.push(employee.first_name + " " + employee.last_name);
+                            })
+                            return employeeArray;
+                        },
+                        name: "employee",
                     },
                 ])
         }
@@ -310,47 +317,28 @@ const newEmployee = () => {
                         type: "rawlist",
                         message: "Select a role for this employee ",
                         choices() {
-                            const results = [];
-                            data.forEach(object => {
-                                console.log(object.title)
-                                let objRoles = [];
-                                return data.filter(x => x.title !== object.title);
-                                console.log(object)
-                                results.push(object);
-                                // if (result) {
-                                //     object.related.forEach(item => {
-                                //         if(!result.related.find(x=>x._id === ))
-                                //     })
-                                // }
-                            })
-                            // [...new Set(data.map(a => JSON.stringify(a)))].map(s => JSON.parse(s))
-                            // console.log(roleObj)
-                            // .map(s => JSON.parse(s))
-                            // console.table(data.title)
-                            // return [...new Set(data.title)]
-                            // if (title.title !== title.title) {
-                            // roleArray.push(title.title);
-                            // // }
-
-                            return results;
+                            let result = [...new Set(data.map(e => e.title))]
+                            return result;
                         },
                         name: "role_id"
                     },
                 ]).then(({ first_name, last_name, role_id, manager_id }) => {
-                    console.log(manager_id)
+                    console.log(first_name, last_name, role_id, manager_id)
                     console.log(manager_id.split(" "))
+                    let managerNames = manager_id.split(' ')
                     connection.query(`SELECT id FROM role WHERE title=?`,
                         [role_id],
                         (err, res) => {
                             if (err) throw err;
+                            console.log('manager first = ' + managerNames[0] + 'manger last = ' + managerNames[1])
                             console.log(res[0].id)
                             const roleNumber = res[0].id;
-                            connection.query(`SELECT id FROM employee WHERE first_name=? AND last_name=?`,
-                                [manager_id[0], manager_id[1]],
+                            connection.query(`SELECT id FROM employee WHERE (first_name=?) AND (last_name=?);`,
+                                [managerNames[0], managerNames[1]],
                                 (err, res) => {
                                     if (err) throw err;
-                                    console.log(res[0])
-                                    const managerNumber = res[0];
+                                    console.log(res[0].id)
+                                    const managerNumber = res[0].id;
                                     connection.query(
                                         'INSERT INTO employee SET ?',
                                         {

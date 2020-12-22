@@ -1,7 +1,7 @@
 {
   "name": "rv-employee-tracker",
   "version": "1.0.0",
-  "description": "This command-line application is used to manage a company's employees",
+  "description": "Easily manage employees, roles and departments with this user-friendly command-line application.",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -25,6 +25,7 @@
   "homepage": "https://github.com/rayna-v/rv-employee-tracker#readme",
   "dependencies": {
     "ascii": "^1.0.0",
+    "asciiart-logo": "^0.2.6",
     "chalk": "^4.1.0",
     "console.table": "^0.10.0",
     "inquirer": "^7.3.3",

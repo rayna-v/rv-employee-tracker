@@ -86,6 +86,18 @@ const view = () => {
 
 // ----------------------------------------------------------> UPDATE Actions
 const update = () => {
+    connection.query(
+        'SELECT * FROM role', (err, data) => {
+            inquirer
+                .prompt([
+                    {
+                        type: "",
+                        message: "",
+                        name: "",
+                    },
+                ])
+        }
+    )
 
 }
 
@@ -200,7 +212,7 @@ const newDepartment = () => {
         .then(() => {
             connection.query(`SELECT * FROM department`, (err, res) => {
                 if (err) throw err;
-                console.log(res);
+                console.table(res);
                 runInquirer();
             })
         });
@@ -254,7 +266,7 @@ const newRole = () => {
                                     // return res
                                     connection.query('SELECT * FROM role', (err, res) => {
                                         if (err) throw err;
-                                        console.log(res);
+                                        console.table(res);
                                         runInquirer();
                                     })
                                 });
@@ -267,6 +279,7 @@ const newRole = () => {
 const newEmployee = () => {
     connection.query(
         'SELECT employee.id, employee.first_name, employee.last_name, employee.role_id, role.id, role.title, role.department_id FROM employee LEFT JOIN role ON (employee.role_id = role.id) ORDER BY employee.role_id', (err, data) => {
+            // console.table(data)
             inquirer
                 .prompt([
                     {
@@ -287,7 +300,6 @@ const newEmployee = () => {
                         choices() {
                             const managerArray = [];
                             data.forEach((employee) => {
-                                console.log(employee.first_name + employee.last_name)
                                 managerArray.push(employee.first_name + " " + employee.last_name);
                             })
                             return managerArray;
@@ -298,12 +310,29 @@ const newEmployee = () => {
                         type: "rawlist",
                         message: "Select a role for this employee ",
                         choices() {
-                            const deptArray = [];
-                            data.forEach((title) => {
-                                // console.log(title.title)
-                                deptArray.push(title.title);
+                            const results = [];
+                            data.forEach(object => {
+                                console.log(object.title)
+                                let objRoles = [];
+                                return data.filter(x => x.title !== object.title);
+                                console.log(object)
+                                results.push(object);
+                                // if (result) {
+                                //     object.related.forEach(item => {
+                                //         if(!result.related.find(x=>x._id === ))
+                                //     })
+                                // }
                             })
-                            return deptArray;
+                            // [...new Set(data.map(a => JSON.stringify(a)))].map(s => JSON.parse(s))
+                            // console.log(roleObj)
+                            // .map(s => JSON.parse(s))
+                            // console.table(data.title)
+                            // return [...new Set(data.title)]
+                            // if (title.title !== title.title) {
+                            // roleArray.push(title.title);
+                            // // }
+
+                            return results;
                         },
                         name: "role_id"
                     },

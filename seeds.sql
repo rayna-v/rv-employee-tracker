@@ -14,15 +14,16 @@ CREATE TABLE role (
     title VARCHAR(30),
     salary DECIMAL (10,2),
     department_id INT NOT NULL,
-    CONSTRAINT `fk_department_name` FOREIGN KEY (department_id) REFERENCES department(id)
+    CONSTRAINT `fk_department_name` FOREIGN KEY (department_id) REFERENCES department(id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
 CREATE TABLE employee (
     id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
     first_name VARCHAR(30),
     last_name VARCHAR(30),
-    role_id INT,
-    manager_id INT
+    role_id INT NOT NULL,
+    manager_id INT,
+    CONSTRAINT `fk_employee_role` FOREIGN KEY (role_id) REFERENCES role(id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
 INSERT INTO department (name)
@@ -37,4 +38,3 @@ VALUES ("John", "Smith", 1, NULL), ("Jane", "Smith", 1, 1), ("Maynard", "Keenan"
 SELECT * FROM department;
 SELECT * FROM employee;
 SELECT * FROM role;
-

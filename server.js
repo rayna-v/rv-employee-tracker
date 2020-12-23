@@ -4,7 +4,21 @@ const inquirer = require('inquirer');
 const chalk = require('chalk');
 const logo = require('asciiart-logo');
 const config = require('./package.json');
-console.log(logo(config).render());
+console.log(logo({
+    name: "Employee Tracker",
+    font: "ANSI SHADOW",
+    lines: 8,
+    padding: 2,
+    margin: 2,
+    borderColor: 'bold-red',
+    logoColor: 'bold-blue',
+    textColor: 'white'
+}).emptyLine()
+    .right('version 1.0.00')
+    .emptyLine()
+    .center('Easily manage employees, roles and departments with this user-friendly command-line application.')
+    .render()
+);
 
 // creates connection
 const connection = mysql.createConnection({
@@ -17,6 +31,7 @@ const connection = mysql.createConnection({
 
 // --------------------------------------------------------------------------------> Initial Prompts
 const runInquirer = () => {
+
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
 
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
@@ -51,6 +66,7 @@ const runInquirer = () => {
 };
 // ----------------------------------------------------------> READ Actions
 const view = () => {
+    console.clear();
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
     console.log(chalk.redBright('View Employees, Roles, or Departments'))
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
@@ -77,6 +93,7 @@ const view = () => {
 
 // ----------------------------------------------------------> UPDATE Actions
 const update = () => {
+    console.clear();
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
     console.log(chalk.redBright('Update Employee'))
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
@@ -88,7 +105,6 @@ const update = () => {
             return roleArray;
         }
     )
-
     connection.query(
         'SELECT * FROM employee', (err, data) => {
             inquirer
@@ -125,15 +141,12 @@ const update = () => {
                     }
                 ])
                 .then(({ employee, role_id, manager }) => {
-                    console.log(employee, role_id)
-                    console.log(manager.split(" "))
                     let employeeNames = employee.split(' ');
                     let managerName = manager.split(' ');
                     connection.query(`SELECT id FROM role WHERE title=?`,
                         [role_id],
                         (err, res) => {
                             if (err) throw err;
-                            console.log('employee first = ' + employeeNames[0] + ' || employee last = ' + employeeNames[1])
                             const roleNumber = res[0].id;
                             connection.query(
                                 'SELECT id FROM employee WHERE ? AND ?',
@@ -148,7 +161,6 @@ const update = () => {
                                 ],
                                 (err, res) => {
                                     if (err) throw err;
-
                                     connection.query(`UPDATE employee SET ? WHERE ? AND ?;`,
                                         [
                                             {
@@ -163,10 +175,12 @@ const update = () => {
                                         ],
                                         (err, res) => {
                                             if (err) throw err;
-
-
                                             connection.query('SELECT * FROM employee', (err, res) => {
                                                 if (err) throw err;
+                                                console.clear();
+                                                console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
+                                                console.log(chalk.redBright('Employee role has been updated'))
+                                                console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
                                                 console.table(res);
                                                 runInquirer();
                                             })
@@ -185,6 +199,7 @@ const update = () => {
 
 // ----------------------------------------------------------> DELETE Actions
 const remove = () => {
+    console.clear();
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
     console.log(chalk.redBright('Remove Employee, Role or Department'))
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
@@ -236,6 +251,7 @@ const remove = () => {
                                             remove();
                                         case false:
                                         default:
+                                            console.clear();
                                             runInquirer();
                                     }
                                 })
@@ -253,6 +269,7 @@ const remove = () => {
 
 // ----------------------------------------------------------> CREATE Actions
 const add = () => {
+    console.clear();
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
     console.log(chalk.redBright('Add Employee, Role or Department'))
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
@@ -285,6 +302,7 @@ const add = () => {
 }
 // ----------------------------------> Add Department
 const newDepartment = () => {
+    console.clear();
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
     console.log(chalk.redBright('Add New Department'))
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
@@ -315,6 +333,7 @@ const newDepartment = () => {
 };
 // ----------------------------------> Add Role
 const newRole = () => {
+    console.clear();
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
     console.log(chalk.redBright('Add New Role'))
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
@@ -374,6 +393,7 @@ const newRole = () => {
 }
 // ----------------------------------> Add Employee
 const newEmployee = () => {
+    console.clear();
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
     console.log(chalk.redBright('Add New Employee'))
     console.log(chalk.blueBright('---------------------------------------------------------------------------------'))
@@ -458,18 +478,20 @@ const newEmployee = () => {
 //incomplete
 // ----------------------------------------------------------> View by Manager Actions (READ)
 const viewByManager = () => {
+    console.clear();
     console.log(chalk.red("View Employees by Manager is under maintenance. Sorry for the inconvenience"));
     runInquirer();
 }
 //incomplete
 // ----------------------------------------------------------> View Budget Actions (READ)
 const viewBudget = () => {
+    console.clear();
     console.log(chalk.red("View Budget by Department is under maintenance. Sorry for the inconvenience"));
     runInquirer();
 };
 // asynchronous operation that connects to the database
 connection.connect((err) => {
     if (err) throw err;
-    console.log(`connected as id ${connection.threadId}`);
+    console.log(chalk.redBright(`Welcome`));
     runInquirer();
 });
